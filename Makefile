@@ -31,7 +31,7 @@ start-clair:
 
 analyze: Dockerfile
 	@echo "Analyzing Dockerfile using Hadolint..."
-	@docker run --rm -i hadolint/hadolint hadolint --ignore DL3018 - < Dockerfile
+	@docker run --rm -i hadolint/hadolint hadolint --ignore DL3018 --ignore SC1068 - < Dockerfile
 	@echo "Analyzing Dockerfile using DockerfileLint..."
 	@docker run -it --rm -v $(PWD):/root/ projectatomic/dockerfile-lint dockerfile_lint \
 		-r /root/policies/security_rules.yml \
@@ -40,7 +40,11 @@ analyze: Dockerfile
 
 build: analyze
 	@echo "Building Hugo Builder container..."
-	@docker build -t $(NS)/$(CONTAINER_NAME):$(VERSION) .
+	@docker build \
+		--build-arg BUILD_DATE=`date -u +'%Y-%m-%dT%H:%M:%SZ'` \
+		--build-arg BUILD_VERSION=$(VERSION) \
+		--build-arg BUILD_REVISION=`git rev-parse HEAD` \
+		-t $(NS)/$(CONTAINER_NAME):$(VERSION) .
 	@docker images $(NS)/$(CONTAINER_NAME):$(VERSION)
 	@echo "Hugo Builder container built!"
 
@@ -64,19 +68,32 @@ check-health:
 	@docker inspect --format='{{json .State.Health}}' $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
 	@echo "Finished checking health of OrgDoc site!"
 
-push:
-	@echo "Pushing docker image to Docker registry..."
-	@docker push $(NS)/$(IMAGE_NAME):$(VERSION)
-	@echo "Finished pushing docker image to Docker registry!"
 
-scan:  
+security-scan:  
 	@echo "Scanning Hugo Builder for security vulnerabilities..."
 	@make start-clair
 	@./clair-scanner --ip 172.17.0.1 $(NS)/$(CONTAINER_NAME):$(VERSION)
 	@make stop-clair
 	@echo "Finished Scanning Hugo Builder for security vulnerabilities!"
 
-release: build scan
+inspect-labels:
+	@echo "Inspecting Hugo Server Container labels..."
+	@echo "maintainer set to..."
+	@docker inspect --format '{{ index .Config.Labels}}' $(NS)/$(CONTAINER_NAME):$(VERSION)
+	@echo "Labels inspected!"
+
+bom:
+	@echo "Genarating Bill of Materials using Tern ..."
+	@docker run --privileged --rm -v /var/run/docker.sock:/var/run/docker.sock -v /hostmount \
+		ternd report -i $(NS)/$(CONTAINER_NAME):$(VERSION) > bom.txt
+	@echo "Finished genaration of Bill of Materials!"
+
+push:
+	@echo "Pushing docker image to Docker registry..."
+	@docker push $(NS)/$(IMAGE_NAME):$(VERSION)
+	@echo "Finished pushing docker image to Docker registry!"
+
+release: build security-scan
 	@make push -e VERSION=$(VERSION)
 
-.PHONY: clean scan stop-clair start-clair analyze build build-site start stop check-health push release
+.PHONY: clean security-scan inspect-labels stop-clair start-clair analyze build build-site start stop check-health push release

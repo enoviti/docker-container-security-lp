@@ -1,6 +1,17 @@
 FROM alpine:3.12
 
+ARG BUILD_DATE 
+ARG BUILD_VERSION
+ARG BUILD_REVISION
+
 LABEL maintainer="Anshuman Purohit<apurohit@enoviti.com>"
+LABEL org.opencontainers.image.created=$BUILD_DATE
+LABEL org.opencontainers.image.version=$BUILD_VERSION
+LABEL org.opencontainers.image.revision=$BUILD_REVISION
+LABEL org.opencontainers.image.license="MIT"
+LABEL org.opencontainers.image.URL="http://enoviti.com"
+LABEL org.opencontainers.image.title="OrgDoc Hugo Builder Image"
+
 
 RUN apk add --no-cache \
     curl \

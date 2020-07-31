@@ -27,7 +27,55 @@
           reference_url:
             - "http://docs.projectatomic.io/container-best-practices/#"
             - "_recommended_labels_for_your_project"
-            
+        org.opencontainers.image.created:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.created' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.created' label identifies date and time on which the image was built (string, date-time as defined by RFC 3339)"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.version:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.version' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.version' label line identifies semantic version of the image"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.revision:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.revision' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.revision' label identifies source control revision identifier (git commitId) for the packaged software"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.url:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.url' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.url' label denotes URL to find more information on the image (string)"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.license:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.license' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.license' label identifies license(s) under which contained software is distributed as an SPDX License Expression"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.title:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.title' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.title' label identifies human-readable title of the image (string)"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+
     HEALTHCHECK:
       paramSyntaxRegex: /.+/
       defined_namevals:

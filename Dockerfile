@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.created=$BUILD_DATE
 LABEL org.opencontainers.image.version=$BUILD_VERSION
 LABEL org.opencontainers.image.revision=$BUILD_REVISION
 LABEL org.opencontainers.image.license="MIT"
-LABEL org.opencontainers.image.URL="http://enoviti.com"
+LABEL org.opencontainers.image.URL="https://github.com/enoviti/docker-container-security-lp"
 LABEL org.opencontainers.image.title="OrgDoc Hugo Builder Image"
 
 

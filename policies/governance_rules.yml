@@ -1,6 +1,6 @@
   profile:
-    name: "Custom"
-    description: "Custom Profile. Checks basic syntax."
+    name: "Governance"
+    description: "Governance Profile. Checks basic governance policies."
     
   line_rules:
     FROM: 
@@ -36,7 +36,7 @@
           reference_url:
             - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
         org.opencontainers.image.version:
-          valueRegex: /([\w]+)./
+          valueRegex: /\$BUILD_VERSION$/
           message: "Label 'org.opencontainers.image.version' is missing or has invalid format" 
           description: "The 'org.opencontainers.image.version' label line identifies semantic version of the image"
           level: "error"
@@ -44,7 +44,7 @@
           reference_url:
             - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
         org.opencontainers.image.revision:
-          valueRegex: /([\w]+)./
+          valueRegex: /\$BUILD_REVISION$/
           message: "Label 'org.opencontainers.image.revision' is missing or has invalid format" 
           description: "The 'org.opencontainers.image.revision' label identifies source control revision identifier (git commitId) for the packaged software"
           level: "error"
@@ -60,7 +60,7 @@
           reference_url:
             - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
         org.opencontainers.image.license:
-          valueRegex: /([\w]+)./
+          valueRegex: /^(Apache\-2\.0|LGPL\-3\.0\-only|MIT|UNLICENSED)$/
           message: "Label 'org.opencontainers.image.license' is missing or has invalid format" 
           description: "The 'org.opencontainers.image.license' label identifies license(s) under which contained software is distributed as an SPDX License Expression"
           level: "error"

@@ -1,0 +1,7 @@
+---
+profile:
+  name: "FinShare Container Policies"
+  description: "FinShare Container Policies"
+  includes:
+    - security_rules.yml
+    - governance_rules.yml

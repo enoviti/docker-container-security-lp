@@ -2,8 +2,7 @@
 profile:
   name: "Security Rules"
   description: "Set of rules focus on security aspects of Dockerfiles"
-  includes:
-      - custom_rules.yml
+
 line_rules:
 
   ADD:

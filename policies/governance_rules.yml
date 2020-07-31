@@ -1,0 +1,108 @@
+  profile:
+    name: "Governance"
+    description: "Governance Profile. Checks basic governance policies."
+    
+  line_rules:
+    FROM: 
+      paramSyntaxRegex: /^[\w./\-:]+(:[\w.]+)?(-[\w]+)?$/
+      rules: 
+        - 
+          label: "is_latest_tag"
+          regex: /latest/
+          level: "error"
+          message: "base image uses 'latest' tag"
+          description: "using the 'latest' tag may cause unpredictable builds. It is recommended that a specific tag is used in the FROM line or *-released which is the latest supported release."
+          reference_url: 
+            - "https://docs.docker.com/engine/reference/builder/"
+            - "#from"
+    LABEL:
+      paramSyntaxRegex: /.+/
+      defined_namevals:
+        maintainer:
+          valueRegex: /([\w]+)./
+          message: "Label 'maintainer' is missing or has invalid format" 
+          description: "The 'maintainer' label line is useful for identifying the author in the form : Joe Smith <joe.smith@example.com>"
+          level: "error"
+          required: true
+          reference_url:
+            - "http://docs.projectatomic.io/container-best-practices/#"
+            - "_recommended_labels_for_your_project"
+        org.opencontainers.image.created:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.created' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.created' label identifies date and time on which the image was built (string, date-time as defined by RFC 3339)"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.version:
+          valueRegex: /\$BUILD_VERSION$/
+          message: "Label 'org.opencontainers.image.version' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.version' label line identifies semantic version of the image"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.revision:
+          valueRegex: /\$BUILD_REVISION$/
+          message: "Label 'org.opencontainers.image.revision' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.revision' label identifies source control revision identifier (git commitId) for the packaged software"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.url:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.url' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.url' label denotes URL to find more information on the image (string)"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.license:
+          valueRegex: /^(Apache\-2\.0|LGPL\-3\.0\-only|MIT|UNLICENSED)$/
+          message: "Label 'org.opencontainers.image.license' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.license' label identifies license(s) under which contained software is distributed as an SPDX License Expression"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+        org.opencontainers.image.title:
+          valueRegex: /([\w]+)./
+          message: "Label 'org.opencontainers.image.title' is missing or has invalid format" 
+          description: "The 'org.opencontainers.image.title' label identifies human-readable title of the image (string)"
+          level: "error"
+          required: true
+          reference_url:
+            - "https://github.com/opencontainers/image-spec/blob/master/annotations.md"
+
+    HEALTHCHECK:
+      paramSyntaxRegex: /.+/
+      defined_namevals:
+        maintainer:
+          valueRegex: /curl/
+          message: "Healthcheck uses curl" 
+          description: "HEALTHCHECK should not use the 'curl' or 'iwr'"
+          level: "error"
+          reference_url:
+            - "https://blog.sixeyed.com/docker-healthchecks-why-not-to-use-curl-or-iwr/"
+
+  required_instructions:
+  -
+    count: 1
+    description: "Labels are needed because...."
+    instruction: LABEL
+    level: error
+    message: "No LABELs are defined"
+    reference_url:
+      - "https://docs.docker.com/engine/reference/builder/"
+      - "#label"
+  - 
+      instruction: "HEALTHCHECK"
+      count: 1
+      level: "error"
+      message: "HEALTHCHECK is not defined"
+      description: "The HEALTHCHECK line is useful for monitoring if the application demon process is running properly in the container"
+      reference_url: 
+        - "https://docs.docker.com/engine/reference/builder/"
+        - "#healthcheck"

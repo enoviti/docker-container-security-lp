@@ -115,9 +115,10 @@ test-site:
 push:
 	@echo "Pushing docker image to Docker registry..."
 	@docker push $(NS)/$(IMAGE_NAME):$(VERSION)
+	#@docker trust sign $(NS)/$(IMAGE_NAME):$(VERSION)
 	@echo "Finished pushing docker image to Docker registry!"
 
-release: test security-scan inspect-labels bom
+release: test-site security-scan inspect-labels bom
 	@make push -e VERSION=$(VERSION)
 
 .PHONY: clean test-site run-site security-scan inspect-labels stop-clair start-clair analyze build build-site start-site stop-site check-health push release

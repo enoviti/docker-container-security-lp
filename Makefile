@@ -6,6 +6,7 @@ VERSION ?= latest
 IMAGE_NAME ?= hugo-builder
 CONTAINER_NAME ?= hugo-builder
 CONTAINER_INSTANCE ?= default
+USER ?= apurohit
 
 default: build
 
@@ -115,10 +116,18 @@ test-site:
 push:
 	@echo "Pushing docker image to Docker registry..."
 	@docker push $(NS)/$(IMAGE_NAME):$(VERSION)
-	#@docker trust sign $(NS)/$(IMAGE_NAME):$(VERSION)
 	@echo "Finished pushing docker image to Docker registry!"
 
 release: test-site security-scan inspect-labels bom
 	@make push -e VERSION=$(VERSION)
+
+dct-keygen:
+	@docker trust key generate $(USER) --dir ~/.docker/trust
+	@docker trust signer add --key ~/.docker/trust/$(USER).pub $(USER) $(NS)/$(IMAGE_NAME)
+	@notary -d ~/.docker/trust key list
+
+dct-sign:
+	@docker trust sign $(NS)/$(IMAGE_NAME):$(VERSION)
+	@docker trust inspect --pretty $(NS)/$(IMAGE_NAME):$(VERSION)
 
 .PHONY: clean test-site run-site security-scan inspect-labels stop-clair start-clair analyze build build-site start-site stop-site check-health push release

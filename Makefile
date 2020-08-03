@@ -52,6 +52,12 @@ start-site: build-site
 	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):$(VERSION) hugo server -w --bind=0.0.0.0
 	@echo "Finished Serving OrgDoc Site!"
 
+start-site-trusted: 
+	@echo "Serving OrgDoc Site (Trusted)..."
+	@DOCKER_CONTENT_TRUST=1 \
+		docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):1.0 hugo server -w --bind=0.0.0.0
+	@echo "Finished Serving OrgDoc Site!"
+
 stop-site:
 	@echo "Stop serving OrgDoc Site..."
 	@docker stop $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)

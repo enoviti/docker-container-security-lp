@@ -15,7 +15,7 @@ clean:
 	@docker image prune -f
 	@docker container prune -f
 	@docker volume prune -f
-	-rm -rf ./public ./archetypes
+	-rm -rf ./public
 	@echo "Finished cleaning up!"
 
 analyze: Dockerfile
@@ -37,31 +37,21 @@ build: analyze
 	@docker images $(NS)/$(CONTAINER_NAME):$(VERSION)
 	@echo "Hugo Builder container built!"
 
-build-site: build
-	@echo "Building OrgDoc Site..."
-	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -it $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):$(VERSION) hugo
-	@echo "Finished building OrgDoc Site!"
-
-run-site: build-site
-	@echo "Serving OrgDoc Site..."
-	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -it $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):$(VERSION) hugo server -w --bind=0.0.0.0
-	@echo "Finished Serving OrgDoc Site!"
-
-start-site: build-site
-	@echo "Serving OrgDoc Site..."
-	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):$(VERSION) hugo server -w --bind=0.0.0.0
-	@echo "Finished Serving OrgDoc Site!"
+start-site: 
+	@echo "Starting OrgDoc Site..."
+	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION) 
+	@echo "Started Serving OrgDoc Site!"
 
 start-site-trusted: 
-	@echo "Serving OrgDoc Site (Trusted)..."
+	@echo "Starting OrgDoc Site (Trusted)..."
 	@DOCKER_CONTENT_TRUST=1 \
-		docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):1.0 hugo server -w --bind=0.0.0.0
-	@echo "Finished Serving OrgDoc Site!"
+		docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(ENV) $(NS)/$(IMAGE_NAME):1.0 
+	@echo "Started OrgDoc Site (Trusted)!"
 
 stop-site:
 	@echo "Stop serving OrgDoc Site..."
 	@docker stop $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
-	@echo "Finished Serving OrgDoc Site!"
+	@echo "Stopped OrgDoc Site!"
 
 check-health:
 	@echo "Checking health of OrgDoc site..."
@@ -124,7 +114,7 @@ push:
 	@docker push $(NS)/$(IMAGE_NAME):$(VERSION)
 	@echo "Finished pushing docker image to Docker registry!"
 
-release: test-site security-scan inspect-labels bom
+release: build test-site security-scan inspect-labels bom
 	@make push -e VERSION=$(VERSION)
 
 dct-keygen:
@@ -136,4 +126,4 @@ dct-sign:
 	@docker trust sign $(NS)/$(IMAGE_NAME):$(VERSION)
 	@docker trust inspect --pretty $(NS)/$(IMAGE_NAME):$(VERSION)
 
-.PHONY: clean test-site run-site security-scan inspect-labels stop-clair start-clair analyze build build-site start-site stop-site check-health push release
+.PHONY: clean test-site security-scan inspect-labels stop-clair start-clair analyze build build-site start-site stop-site check-health push release

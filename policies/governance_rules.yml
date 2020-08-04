@@ -4,7 +4,7 @@
     
   line_rules:
     FROM: 
-      paramSyntaxRegex: /^[\w./\-:]+(:[\w.]+)?(-[\w]+)?$/
+      paramSyntaxRegex: /^[\w./\-:]+(:[\w.]+)?(-[\w]+)?/
       rules: 
         - 
           label: "is_latest_tag"

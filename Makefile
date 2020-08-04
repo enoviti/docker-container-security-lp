@@ -6,6 +6,7 @@ VERSION ?= latest
 IMAGE_NAME ?= hugo-builder
 CONTAINER_NAME ?= hugo-builder
 CONTAINER_INSTANCE ?= default
+USER ?= apurohit
 
 default: build
 
@@ -14,7 +15,7 @@ clean:
 	@docker image prune -f
 	@docker container prune -f
 	@docker volume prune -f
-	-rm -rf ./public ./archetypes
+	-rm -rf ./public
 	@echo "Finished cleaning up!"
 
 analyze: Dockerfile
@@ -36,27 +37,23 @@ build: analyze
 	@docker images $(NS)/$(CONTAINER_NAME):$(VERSION)
 	@echo "Hugo Builder container built!"
 
-build-site: build
-	@echo "Building OrgDoc Site..."
-	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -it $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):$(VERSION) hugo
-	@echo "Finished building OrgDoc Site!"
+start: 
+	@echo "Starting OrgDoc Site..."
+	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION) 
+	@echo "Started Serving OrgDoc Site!"
 
-run-site: build-site
-	@echo "Serving OrgDoc Site..."
-	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -it $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):$(VERSION) hugo server -w --bind=0.0.0.0
-	@echo "Finished Serving OrgDoc Site!"
+start-trusted: 
+	@echo "Starting OrgDoc Site (Trusted)..."
+	@DOCKER_CONTENT_TRUST=1 \
+		docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(ENV) $(NS)/$(IMAGE_NAME):1.0 
+	@echo "Started OrgDoc Site (Trusted)!"
 
-start-site: build-site
-	@echo "Serving OrgDoc Site..."
-	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(VOLUMES) $(ENV) -u hugo $(NS)/$(IMAGE_NAME):$(VERSION) hugo server -w --bind=0.0.0.0
-	@echo "Finished Serving OrgDoc Site!"
-
-stop-site:
+stop:
 	@echo "Stop serving OrgDoc Site..."
 	@docker stop $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
-	@echo "Finished Serving OrgDoc Site!"
+	@echo "Stopped OrgDoc Site!"
 
-check-health:
+healthcheck:
 	@echo "Checking health of OrgDoc site..."
 	@docker inspect --format='{{json .State.Health}}' $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
 	@echo "Finished checking health of OrgDoc site!"
@@ -107,17 +104,26 @@ bom:
 	@ls -la bom.spdx
 	@echo "Finished genaration of Bill of Materials!"
 
-test-site:
-	@make start-site
+test:
+	@make start
 	@sleep 10
-	@make check-health stop-site
+	@make healthcheck stop
 	
 push:
 	@echo "Pushing docker image to Docker registry..."
 	@docker push $(NS)/$(IMAGE_NAME):$(VERSION)
 	@echo "Finished pushing docker image to Docker registry!"
 
-release: test security-scan inspect-labels bom
+release: build test security-scan inspect-labels bom
 	@make push -e VERSION=$(VERSION)
 
-.PHONY: clean test-site run-site security-scan inspect-labels stop-clair start-clair analyze build build-site start-site stop-site check-health push release
+dct-keygen:
+	@docker trust key generate $(USER) --dir ~/.docker/trust
+	@docker trust signer add --key ~/.docker/trust/$(USER).pub $(USER) $(NS)/$(IMAGE_NAME)
+	@notary -d ~/.docker/trust key list
+
+dct-sign:
+	@docker trust sign $(NS)/$(IMAGE_NAME):$(VERSION)
+	@docker trust inspect --pretty $(NS)/$(IMAGE_NAME):$(VERSION)
+
+.PHONY: clean test security-scan inspect-labels stop-clair start-clair analyze build build-site start stop healthcheck push release

@@ -37,23 +37,23 @@ build: analyze
 	@docker images $(NS)/$(CONTAINER_NAME):$(VERSION)
 	@echo "Hugo Builder container built!"
 
-start-site: 
+start: 
 	@echo "Starting OrgDoc Site..."
 	@docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION) 
 	@echo "Started Serving OrgDoc Site!"
 
-start-site-trusted: 
+start-trusted: 
 	@echo "Starting OrgDoc Site (Trusted)..."
 	@DOCKER_CONTENT_TRUST=1 \
 		docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -d $(PORTS) $(ENV) $(NS)/$(IMAGE_NAME):1.0 
 	@echo "Started OrgDoc Site (Trusted)!"
 
-stop-site:
+stop:
 	@echo "Stop serving OrgDoc Site..."
 	@docker stop $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
 	@echo "Stopped OrgDoc Site!"
 
-check-health:
+healthcheck:
 	@echo "Checking health of OrgDoc site..."
 	@docker inspect --format='{{json .State.Health}}' $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
 	@echo "Finished checking health of OrgDoc site!"
@@ -104,17 +104,17 @@ bom:
 	@ls -la bom.spdx
 	@echo "Finished genaration of Bill of Materials!"
 
-test-site:
-	@make start-site
+test:
+	@make start
 	@sleep 10
-	@make check-health stop-site
+	@make healthcheck stop
 	
 push:
 	@echo "Pushing docker image to Docker registry..."
 	@docker push $(NS)/$(IMAGE_NAME):$(VERSION)
 	@echo "Finished pushing docker image to Docker registry!"
 
-release: build test-site security-scan inspect-labels bom
+release: build test security-scan inspect-labels bom
 	@make push -e VERSION=$(VERSION)
 
 dct-keygen:
@@ -126,4 +126,4 @@ dct-sign:
 	@docker trust sign $(NS)/$(IMAGE_NAME):$(VERSION)
 	@docker trust inspect --pretty $(NS)/$(IMAGE_NAME):$(VERSION)
 
-.PHONY: clean test-site security-scan inspect-labels stop-clair start-clair analyze build build-site start-site stop-site check-health push release
+.PHONY: clean test security-scan inspect-labels stop-clair start-clair analyze build build-site start stop healthcheck push release
